@@ -46,12 +46,13 @@ def gelman_rubin_convergence(withinchainvar, meanchain, n, Nchains, ndim):
 # write parameters fitted in files
 def write_params(filename, params_mcmc, params_name, reduced_chi2, fix_params, dof):
     header_line = '# The fitted parameters {} (by row) with their upward and downward one sigma error, and the reduced \chi^2.\n'.format(params_name[:])
-    header_line += '# And the other parameters are fixed (0. may mean unfixed) with value: {}. Degree of freedom of fitting is {}.\n'.format(fix_params[:], dof)
+    header_line += '# And the other parameters are fixed (0. may mean unfixed) with value: {}. \n'.format(fix_params[:])
     with open(filename, 'w') as fwriter:
         fwriter.write(header_line)
         for i in range(len(params_name)):
             fwriter.write("#{0}: {1:.7f} {2:.7f} {3:.7f}\n".format(params_name[i], params_mcmc[i][0], params_mcmc[i][1], params_mcmc[i][2]))
-        fwriter.write("#reduced_chi2: {0:.7f}".format(reduced_chi2))
+        fwriter.write("#reduced_chi2: {0:.7f}\n".format(reduced_chi2))
+        fwriter.write("#dof: {0}".format(dof))
 
 # Define a function to set parameters which are free and which are fixed.
 def set_params(all_params, params_indices, all_names, all_temperature):
