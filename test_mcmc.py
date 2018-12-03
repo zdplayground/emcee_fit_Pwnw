@@ -11,8 +11,8 @@ from emcee.utils import MPIPool
 #import corner
 #import matplotlib.pyplot as plt
 #from matplotlib.ticker import MaxNLocator
-import argparse
-from mcmc_funs import growth_factor, gelman_rubin_convergence, write_params, lnlike, lnprob
+import yaml
+from mcmc_funs import growth_factor, gelman_rubin_convergence, set_params, lnlike, lnprob, write_params
 
 def chi2(*args):
     return -2 * lnlike(*args)
@@ -129,79 +129,72 @@ def mcmc_routine(ndim, N_walkers, theta, params_T, params_indices, fix_params, k
 
 
 def main():
-    # Define a function to set parameters which are free and which are fixed.
-    def set_params(all_params, params_indices, all_names, all_temperature):
-        fix_params = np.array([], dtype=np.float)
-        theta = np.array([], dtype=np.float)
-        params_T = np.array([], dtype=np.float)
-        params_name = []
-        N_params = 0
-        count = 0
-        for i in params_indices:
-            if i == 1:
-                fix_params = np.append(fix_params, 0.)
-                theta = np.append(theta, all_params[count])
-                params_T = np.append(params_T, all_temperature[count])
-                params_name.append(all_names[count])
-                N_params += 1
-            else:
-                fix_params = np.append(fix_params, all_params[count])
-            count += 1
-        print(theta, params_name, N_params)
-        print("fixed params: ", fix_params)
-        return N_params, theta, fix_params, params_T, params_name
-
     # firstly, read one file and get k bins we want for the fitting range; It's dark matter power spectrum in redshift space
-    inputf = './input_files/kaves.W10_sub_1.0000ga.dat'
-    data_m = np.genfromtxt(inputf, dtype='f8', comments='#', delimiter='', skip_header = 11) # skip the first data row, the first 10 rows are comments.
+    parameter_file = sys.argv[1]
+    with open(parameter_file, 'r') as fr:
+        input_params = yaml.load(fr)
+
+    data_m = np.genfromtxt(input_params['Pwig_ifile'], dtype='f8', comments='#', delimiter='', skip_header = 11) # skip the first data row, the first 10 rows are comments.
     #print(data_m)
     num_kbin = np.size(data_m, axis=0)
     kk = data_m[:, 0]
+    # get indices based on the ascending k
+    indices_sort = [i[0] for i in sorted(enumerate(kk), key=lambda x: x[1])]
     # sort out the indices whose k<=0.3 h/Mpc
-    k_mask = (kk <= 0.3)
-    k_p = kk[k_mask]
+    for i in range(num_kbin):
+        if kk[indices_sort[i]] > 0.3:
+            break
+    print(indices_sort[i-1])
+    indices_p = indices_sort[0: i]
+    k_p = kk[indices_p]
     N_fitbin = len(k_p)
-    mu_p, Pwig = data_m[k_mask, 1], data_m[k_mask, 2]
+
+    mu_p, Pwig = data_m[indices_p, 1], data_m[indices_p, 2]
     print(k_p, N_fitbin)
+
     # input Pnow, note the (k, mu) indices have the same order as those of Pwig data file
-    inputf = './input_files/kaves.N10_sub_1.0000ga.dat'
-    data_m = np.genfromtxt(inputf, dtype='f8', comments='#', delimiter='', skip_header = 11)
-    Pnow = data_m[k_mask, 2]
+    data_m = np.genfromtxt(input_params['Pnow_ifile'], dtype='f8', comments='#', delimiter='', skip_header = 11)
+    Pnow = data_m[indices_p, 2]
     Pwnw_diff_obs = Pwig - Pnow
-    # input covariance matrix of (Pwig-Pnow)
-    ifile_Cov_Pk = './input_files/kaves.wig_minus_now_mean_sub_a_1.0000.dat'
-    Cov_Pk_wnw = np.loadtxt(ifile_Cov_Pk, dtype='f8', comments='#')
-    ivar_Pk_wnow = 1.0/np.diag(Cov_Pk_wnw)
+
+    # input diagonal terms of covariance matrix of (Pwig-Pnow)
+    diag_Cov_Pwnw = np.loadtxt(input_params['diag_Cov_Pwnw_ifile'], dtype='f8', comments='#', usecols=(2,))
+    ivar_Pk_wnow = 1.0/diag_Cov_Pwnw
+    #print(ivar_Pk_wnow)
 
     # input (theoretical) linear power spectrum
-    inputf = './input_files/planck_camb_56106182_matterpower_smooth_z0.dat'
-    k_smooth, Pk_smooth = np.loadtxt(inputf, dtype='f8', comments='#', unpack=True)
-    tck_Pk_sm = interpolate.splrep(k_smooth, Pk_smooth)
-
-    inputf = './input_files/planck_camb_56106182_matterpower_z0.dat'
-    k_wiggle, Pk_wiggle = np.loadtxt(inputf, dtype='f8', comments='#', unpack=True)
+    k_wiggle, Pk_wiggle = np.loadtxt(input_params['Pwig_linear'], dtype='f8', comments='#', unpack=True)
     tck_Pk_linw = interpolate.splrep(k_wiggle, Pk_wiggle)
 
-    alpha_1, alpha_2, sigma, f, b_0, b_scale  = 1.0, 1.0, 10.0, 1.0, 1.0, 0.0                       # b_scale corresponds to b_{\partial}
-    all_names = "alpha_1", "alpha_2", "Sigma_qmax", "f", "b_1", "b_partial"    # the same order for params_indices
-    all_temperature = 0.01, 0.01, 0.1, 0.1, 0.01, 0.1
-    params_indices = [1, 1, 1, 1, 1, 1]     # for redshift space
-    all_params = alpha_1, alpha_2, sigma, f, b_0, b_scale
-    N_params, theta, fix_params, params_T, params_name = set_params(all_params, params_indices, all_names, all_temperature)
+    k_smooth, Pk_smooth = np.loadtxt(input_params['Pnow_linear'], dtype='f8', comments='#', unpack=True)
+    tck_Pk_sm = interpolate.splrep(k_smooth, Pk_smooth)
 
-    sim_z = 0.0    # redshift of the simulated power spectrum
-    N_walkers = 40
-    Omega_m = 0.3075
+    all_params = list(input_params['init_params'].values())
+    params_indices = input_params['params_indices']
+    params_name = list(input_params['init_params'].keys())
+    all_temperature = input_params['all_temperature']
+
+    N_params, theta, fix_params, params_T, params_name = set_params(all_params, params_indices, params_name, all_temperature)
+    #print(N_params, theta, fix_params, params_T, params_name)
+    sim_z = input_params['sim_z']    # redshift of the simulated power spectrum
+    N_walkers = input_params['N_walkers']
+    Omega_m = input_params['Omega_m']
+
     G_0 = growth_factor(0.0, Omega_m) # G_0 at z=0, normalization factor
     norm_gf = growth_factor(sim_z, Omega_m)/G_0
+
     pool = MPIPool(loadbalance=True)
+    np.random.seed(1)    # set random seed for random number generator
     params_mcmc = mcmc_routine(N_params, N_walkers, theta, params_T, params_indices, fix_params, k_p, mu_p, Pwnw_diff_obs, ivar_Pk_wnow, tck_Pk_linw, tck_Pk_sm, norm_gf, params_name, pool)
     print(params_mcmc)
     chi_square = chi2(params_mcmc[:, 0], params_indices, fix_params, k_p, mu_p, Pwnw_diff_obs, ivar_Pk_wnow, tck_Pk_linw, tck_Pk_sm, norm_gf)
     dof = N_fitbin-N_params
     reduced_chi2 = chi_square/dof
-    # ofile_params = './kaves.sub_wnw_10_diff_z{}.out'.format(sim_z)
-    # write_params(ofile_params, params_mcmc, params_name, reduced_chi2, fix_params, dof)
+    odir = './output_files/'
+    if not os.path.exists(odir):
+        os.makedirs(odir)
+    ofile_params = odir + input_params['ofile_name'].format(sim_z, ''.join(map(str, params_indices)))
+    write_params(ofile_params, params_mcmc, params_name, reduced_chi2, fix_params, dof)
     pool.close()
 
 

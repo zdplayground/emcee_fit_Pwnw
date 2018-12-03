@@ -1,0 +1,28 @@
+# Input observed power spectra and the diagonal terms of covariance matrix
+# input observed (simulated) wiggle (with BAO) power spectrum
+Pwig_ifile: ./input_files/kaves.W10_sub_1.0000ga.dat   
+
+# input nowiggle power spectrum
+Pnow_ifile: ./input_files/kaves.N10_sub_1.0000ga.dat   
+
+# input diagonal terms of covariance matrix of Pwig-Pnow
+diag_Cov_Pwnw_ifile: ./input_files/kaves.diag_Cov_Pwnw_sub_a_1.0000.dat  
+# number of mu bins of input power spectrum 
+N_mu_bin: 100    
+
+# input linear power spectrum
+Pwig_linear: ./input_files/planck_camb_56106182_matterpower_z0.dat
+Pnow_linear: ./input_files/planck_camb_56106182_matterpower_smooth_z0.dat
+
+# Fitting parameters; assign initial value before fitting 
+init_params: {"alpha_perp": 1.0, "alpha_para": 1.0, "Sigma_xy": 10.0, "f": 0.5, "b_0": 1.0, "b_partial": 1.0}
+# 1 for free parameter; 0 for fixed parameter
+params_indices: [1, 1, 1, 1, 0, 1] 
+all_temperature: [0.01, 0.01, 0.1, 0.1, 0.01, 0.1]
+
+N_walkers: 40    # number of MCMC random walkers in each chain
+Omega_m: 0.3075  # matter density of the background \Lambda CDM model
+sim_z: 0.0       # redshift of the input files
+
+# output file
+ofile_name: 'kaves.sub_wnw_10_diff_z{}_params{}.out'
