@@ -1,0 +1,9 @@
+# The fitted parameters ['alpha_perp', 'alpha_para', 'Sigma_xy', 'f', 'b_partial'] (by row) with their upward and downward one sigma error, and the reduced \chi^2.
+# And the other parameters are fixed (0. may mean unfixed) with value: [0. 0. 0. 0. 1. 0.]. 
+#alpha_perp: 1.0036378 0.0028494 0.0027443
+#alpha_para: 1.0074607 0.0049541 0.0047956
+#Sigma_xy: 8.6196917 0.3997098 0.3907124
+#f: 0.5363266 0.0478697 0.0467166
+#b_partial: 2.9863611 6.0927011 5.2915893
+#reduced_chi2: 0.9935014
+#dof: 4337
