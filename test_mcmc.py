@@ -12,7 +12,30 @@ from emcee.utils import MPIPool
 #import matplotlib.pyplot as plt
 #from matplotlib.ticker import MaxNLocator
 import yaml
-from mcmc_funs import growth_factor, gelman_rubin_convergence, set_params, lnlike, lnprob, write_params
+from mcmc_funs import growth_factor, gelman_rubin_convergence, set_params, write_params
+from pre_lnprob_module_rsd_EFT import match_params, cal_pk_model, lnprior
+
+# This is for pre-reconstruction EFT model
+def lnlike(theta, params_indices, fix_params, k_p, mu_p, Pk_obs, ivar, tck_Pk_linw, tck_Pk_sm, norm_gf):
+    alpha_1, alpha_2, sigma, f, b_0, b_scale = match_params(theta, params_indices, fix_params)
+    # set alpha_1=alpha_2 and sigma_xy = sigma_z
+    ##alpha_1 = alpha_2  # be careful to comment it if both alpha_1 and alpha_2 are free parameters.
+    ##sigma_xy = sigma_z
+    coeff = 1.0/alpha_1*(1.0+mu_p**2.0*(pow(alpha_1/alpha_2, 2.0)-1.0))**0.5
+    k_t = k_p*coeff
+    mu_t = mu_p/(alpha_2*coeff)
+    Pk_linw = interpolate.splev(k_t, tck_Pk_linw, der=0)
+    Pk_sm = interpolate.splev(k_t, tck_Pk_sm, der=0)
+
+    Pk_model = cal_pk_model(Pk_linw, Pk_sm, k_t, mu_t, sigma, f, b_0, b_scale, norm_gf)
+    diff = Pk_model - Pk_obs
+    return -0.5* np.sum(diff**2.0 *ivar)
+
+def lnprob(theta, params_indices, fix_params, k_p, mu_p, Pk_obs, ivar, tck_Pk_linw, tck_Pk_sm, norm_gf):
+    lp = lnprior(theta, params_indices, fix_params)
+    if (lp < -1.e20):
+        return -np.inf
+    return lp + lnlike(theta, params_indices, fix_params, k_p, mu_p, Pk_obs, ivar, tck_Pk_linw, tck_Pk_sm, norm_gf)
 
 def chi2(*args):
     return -2 * lnlike(*args)
