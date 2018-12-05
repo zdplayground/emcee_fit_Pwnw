@@ -1,4 +1,4 @@
----
+#---
 # This parameter file is for fitting pre-reconstruction galaxy power spectrum at z=1.0. We use EFT model.
 # Input observed power spectra and the diagonal terms of covariance matrix
 # input observed (simulated) wiggle (with BAO) power spectrum
@@ -8,9 +8,7 @@ Pwig_ifile: ./input_files/z1mcut34/kaves.W10_fof_0.5000ga.dat
 Pnow_ifile: ./input_files/z1mcut34/kaves.N10_fof_0.5000ga.dat   
 
 # input diagonal terms of covariance matrix of Pwig-Pnow
-diag_Cov_Pwnw_ifile: ./input_files/z1mcut34/kaves.diag_Cov_Pwnw_fof_a_0.5000.dat  
-# number of mu bins of input power spectrum 
-N_mu_bin: 100    
+diag_Cov_Pwnw_ifile: ./input_files/z1mcut34/kaves.diag_Cov_Pwnw_fof_a_0.5000.dat    
 
 # input linear power spectrum
 Pwig_linear: ./input_files/planck_camb_56106182_matterpower_z0.dat
@@ -38,4 +36,4 @@ sim_z: 1.0       # redshift of the input files
 # output file
 ofile_name: 'kaves.fof_mcut34_wnw_10_diff_z{}_params{}_EFT.out'  # for EFT model
 
-...
+#...

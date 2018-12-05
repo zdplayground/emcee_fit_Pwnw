@@ -8,9 +8,7 @@ Pwig_ifile: ./input_files/kaves.W10_sub_1.0000ga.dat
 Pnow_ifile: ./input_files/kaves.N10_sub_1.0000ga.dat   
 
 # input diagonal terms of covariance matrix of Pwig-Pnow
-diag_Cov_Pwnw_ifile: ./input_files/kaves.diag_Cov_Pwnw_sub_a_1.0000.dat  
-# number of mu bins of input power spectrum 
-N_mu_bin: 100    
+diag_Cov_Pwnw_ifile: ./input_files/kaves.diag_Cov_Pwnw_sub_a_1.0000.dat      
 
 # input linear power spectrum
 Pwig_linear: ./input_files/planck_camb_56106182_matterpower_z0.dat
