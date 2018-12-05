@@ -1,0 +1,33 @@
+#---
+# This parameter file is for fitting post-reconstruction galaxy power spectrum at z=1.0. We use EFT model.
+# Input observed power spectra and the diagonal terms of covariance matrix
+# input observed (simulated) wiggle (with BAO) power spectrum
+Pwig_ifile: ./input_files/z1mcut34/Rkaves.W10_fof_0.5000ga.dat   
+
+# input nowiggle power spectrum
+Pnow_ifile: ./input_files/z1mcut34/Rkaves.N10_fof_0.5000ga.dat   
+
+# input diagonal terms of covariance matrix of Pwig-Pnow
+diag_Cov_Pwnw_ifile: ./input_files/z1mcut34/Rkaves.diag_Cov_Pwnw_fof_a_0.5000.dat    
+
+# input linear power spectrum
+Pwig_linear: ./input_files/planck_camb_56106182_matterpower_z0.dat
+Pnow_linear: ./input_files/planck_camb_56106182_matterpower_smooth_z0.dat
+
+# Fitting parameters; assign initial value before fitting 
+# ----- post-reconstruction EFT model --------#
+# Sigma2_dd, Sigma2_sd and Sigma2_ss depend on Sigma2_sm. The input values are random numbers  
+init_params: {"alpha_perp": 1.0, "alpha_para": 1.0, "Sigma2_sm": 62.0, "Sigma2_dd": 10.0, "Sigma2_sd": 10.0, "Sigma2_ss": 10.0, "f": 0.5, "b_0": 1.0, "b_partial": 1.0}
+
+# We free parameter Sigma2_sm, but fix Sigma2_dd, Sigma2_sd and Sigma2_ss from theoretical calculation.
+params_indices: [1, 1, 0, 0, 0, 0, 1, 1, 1]   
+all_temperature: [0.01, 0.01, 10.0, 1.0, 1.0, 1.0, 0.1, 0.01, 0.1]
+
+N_walkers: 40    # number of MCMC random walkers in each chain
+Omega_m: 0.3075  # matter density of the background \Lambda CDM model
+sim_z: 1.0       # redshift of the input files
+
+# output file
+ofile_name: 'Rkaves.fof_mcut34_wnw_10_diff_z{}_params{}_EFT.out'  # for EFT model
+
+#...
